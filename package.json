@@ -15,6 +15,17 @@
   "homepage": "https://github.com/samwhite0/interp-react#readme",
   "devDependencies": {
     "babel": "^6.1.18",
-    "babel-core": "^6.1.21"
+    "babel-core": "^6.1.21",
+    "babel-loader": "^6.2.0",
+    "babel-preset-react": "^6.1.18",
+    "babel-preset-stage-0": "^6.1.18",
+    "css-loader": "^0.23.0",
+    "expose-loader": "^0.7.1",
+    "extract-text-webpack-plugin": "^0.9.1",
+    "node-sass": "^3.4.2",
+    "react": "^0.14.2",
+    "sass-loader": "^3.1.1",
+    "style-loader": "^0.13.0",
+    "webpack": "^1.12.6"
   }
 }
