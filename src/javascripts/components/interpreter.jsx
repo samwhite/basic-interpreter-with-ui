@@ -34,7 +34,7 @@ export default class Interpreter extends React.Component {
                     onChange={this._setVolatile}
                     ref="sourceCode"
           ></textarea>
-          <small>Implemented so far: INT, ADD, SUB, JGE, JEQ, SWAP, PRINT</small>
+          <small>Implemented so far: INT, ADD, SUB, JGE, JEQ, SWAP, CALL, PRINT</small>
           <div className="buttons">
           <button className="btn btn-info" onClick={this._load}>Load</button>
           <button className="btn btn-warning" onClick={this._run} disabled={this.state.volatile}>Run</button>
@@ -148,6 +148,11 @@ export default class Interpreter extends React.Component {
           _stack.push(swap_op1);
           _stack.push(swap_op2);
           pc++;
+          break;
+        case "CALL":
+          // CALL X: push pc+1 to stack, jump to X
+          _stack.push(pc + 1);
+          pc = param;
           break;
         case "PRINT":
           // PRINT: peek and print
