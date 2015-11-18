@@ -34,7 +34,7 @@ export default class Interpreter extends React.Component {
                     onChange={this._setVolatile}
                     ref="sourceCode"
           ></textarea>
-          <small>Implemented so far: INT, ADD, SUB, JGE, PRINT</small>
+          <small>Implemented so far: INT, ADD, SUB, JGE, JEQ, SWAP, PRINT</small>
           <div className="buttons">
           <button className="btn btn-info" onClick={this._load}>Load</button>
           <button className="btn btn-warning" onClick={this._run} disabled={this.state.volatile}>Run</button>
@@ -113,16 +113,16 @@ export default class Interpreter extends React.Component {
           break;
         case "ADD":
           // ADD: pop top two, add, push
-          let a = _stack.pop();
-          let b = _stack.pop();
-          _stack.push(a + b);
+          let add_op1 = _stack.pop();
+          let add_op2 = _stack.pop();
+          _stack.push(add_op1 + add_op2);
           _pc++;
           break;
         case "SUB":
           // SUB: pop top two, sub, push
-          let c = _stack.pop();
-          let d = _stack.pop();
-          _stack.push(d - c);
+          let sub_op1 = _stack.pop();
+          let sub_op2 = _stack.pop();
+          _stack.push(sub_op2 - sub_op1);
           _pc++;
           break;
         case "JGE":
@@ -132,6 +132,22 @@ export default class Interpreter extends React.Component {
           } else {
             pc++;
           }
+          break;
+        case "JEQ":
+          // JEQ X: if peek is == 0, jump to X, else continue
+          if(_stack[_stack.length - 1] == 0){
+            pc = param;
+          } else {
+            pc++;
+          }
+          break;
+        case "SWAP":
+          // SWAP: swap top two elements
+          let swap_op1 = _stack.pop();
+          let swap_op2 = _stack.pop();
+          _stack.push(swap_op1);
+          _stack.push(swap_op2);
+          pc++;
           break;
         case "PRINT":
           // PRINT: peek and print
