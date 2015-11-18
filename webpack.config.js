@@ -19,7 +19,7 @@ module.exports = {
         exclude: /(node_modules)/,
         loader: "babel",
         query: {
-          presets: ["react", "stage-0"]
+          presets: ["react", "es2015", "stage-0"]
         }
       },
       {
@@ -31,8 +31,12 @@ module.exports = {
         loader: ExtractTextPlugin.extract("style-loader", "css-loader!sass-loader")
       },
       {
-        test: require.resolve("react/addons"),
+        test: require.resolve("react"),
         loader: "expose?React"
+      },
+      {
+        test: require.resolve("react-dom"),
+        loader: "expose?ReactDOM"
       }
     ]
   },
