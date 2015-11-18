@@ -60,7 +60,7 @@ export default class Interpreter extends React.Component {
       pc: 0
     });
     let errorFlag = false;
-    let srctext = this.refs.sourceCode.value;
+    let srctext = this.refs.sourceCode.value.toUpperCase();
     let lines = srctext.match(/[^\r\n]+/g);
     let inst = [];
 
