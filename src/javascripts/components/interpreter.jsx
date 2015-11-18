@@ -118,7 +118,7 @@ export default class Interpreter extends React.Component {
         break;
       }
     }
-    //update stack/pc for handy ui update (for now)
+    //update stack/pc for ui
     this.setState({
       stack: _stack,
       pc: _pc,
