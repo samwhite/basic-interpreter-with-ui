@@ -9,6 +9,7 @@ export default class Interpreter extends React.Component {
       this.state = {
           defaultCode: "INT 2\nINT 3\nADD\nPRINT",
           instructions: [],
+          labels: new Map(),
           stack: [],
           pc: 0,
           output: "",
@@ -93,6 +94,7 @@ export default class Interpreter extends React.Component {
           </tr>
           </tbody>
           </table>
+          <strong>Note:</strong> Labels can be prepended to lines, e.g. <code>L1: PRINT</code> (note space between the label and command).
         </div>
         <div className="col-md-4 side">
           <span className={this.state.statusClass}>{this.state.status}</span>
@@ -122,15 +124,25 @@ export default class Interpreter extends React.Component {
     let srctext = this.refs.sourceCode.value.toUpperCase();
     let lines = srctext.match(/[^\r\n]+/g);
     let inst = [];
+    let lbls = new Map();
 
     for(let i = 0; i < lines.length; i++){
       lines[i] = lines[i].trim();
+      // check for label
+      if(lines[i].indexOf(":") > -1){
+        let lbl = lines[i].substring(0, lines[i].indexOf(":"));
+        lbls.set(lbl, i);
+        //strip label
+        lines[i] = lines[i].substring(lines[i].indexOf(":") + 2, lines[i].length);
+      }
       let split = lines[i].split(" ");
       //add empty param if needed
       if(typeof split[1] === 'undefined'){
         split.push("");
       }
-      split[1] = parseInt(split[1]) //convert string to int
+      if(!isNaN(parseInt(split[1]))){
+        split[1] = parseInt(split[1]) //convert string to int (unless label)
+      }
       inst.push(split);
       //error check (>1 parameter)
       if(split.length > 2){
@@ -140,23 +152,6 @@ export default class Interpreter extends React.Component {
         inst = [];
         break;
       }
-      //extra error check (>0 params for 0 param calls)
-      if(split[0] == "PRINT" ||
-         split[0] == "ADD" ||
-         split[0] == "SUB" ||
-         split[0] == "SWAP" ||
-         split[0] == "DUP" ||
-         split[0] == "POP" ||
-         split[0] == "RET"
-       ) {
-         if(!isNaN(split[1])) {
-           errorFlag = true;
-           volatileFlag = true;
-           this._updateStatus("Syntax Error: unexpected argument on line " + (i+1));
-           inst = [];
-           break;
-         }
-       }
     };
 
     if(!errorFlag){
@@ -165,6 +160,7 @@ export default class Interpreter extends React.Component {
     }
     this.setState({
       instructions: inst,
+      labels: lbls,
       volatile: volatileFlag
     });
   }
@@ -201,7 +197,12 @@ export default class Interpreter extends React.Component {
         case "JGE":
           // JGE X: if peek is >= 0, jump to X, else continue
           if(_stack[_stack.length - 1] >= 0){
-            _pc = param;
+            // check if line number or label
+            if(typeof param === "number"){
+              _pc = param;
+            } else {
+              _pc = this.state.labels.get(param);
+            }
           } else {
             _pc++;
           }
