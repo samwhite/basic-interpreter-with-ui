@@ -2,7 +2,10 @@
   "name": "interp-react",
   "version": "1.0.0",
   "description": "Interpreter for stack-based language coded in ES6/7 &amp; React (for APT class)",
-  "scripts": {},
+  "scripts": {
+    "build": "webpack",
+    "start": "./run.sh"
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/samwhite0/interp-react.git"

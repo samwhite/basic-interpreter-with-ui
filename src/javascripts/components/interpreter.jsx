@@ -31,6 +31,7 @@ export default class Interpreter extends React.Component {
                     defaultValue={this.state.defaultCode}
                     ref="sourceCode"
           ></textarea>
+          <small>Implemented so far: INT, ADD, PRINT</small>
           <div className="buttons">
           <button className="btn btn-info" onClick={this._load}>Load</button>
           <button className="btn btn-warning" onClick={this._run}>Run</button>
