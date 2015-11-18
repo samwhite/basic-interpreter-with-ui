@@ -34,7 +34,6 @@ export default class Interpreter extends React.Component {
                     onChange={this._setVolatile}
                     ref="sourceCode"
           ></textarea>
-          <small>Implemented so far: INT, ADD, SUB, JGE, JEQ, SWAP, CALL, PRINT</small>
           <div className="buttons">
           <button className="btn btn-info" onClick={this._load}>Load</button>
           <button className="btn btn-warning" onClick={this._run} disabled={this.state.volatile}>Run</button>
@@ -42,12 +41,13 @@ export default class Interpreter extends React.Component {
         </div>
         <div className="col-md-4 side">
           <span className={this.state.statusClass}>{this.state.status}</span>
-          <h5>PC: <span className="monospace">{this.state.pc}</span></h5>
-          <h5>Stack: </h5>
+          <h5>PC:</h5>
+          <span className="monospace">{this.state.pc}</span>
+          <h5>Stack:</h5>
           <p className="monospace">{JSON.stringify(this.state.stack)}</p>
           <h5>Loaded instructions:</h5>
           <p className="monospace">{JSON.stringify(this.state.instructions)}</p>
-          <h5>Output</h5>
+          <h5>Output:</h5>
           <pre className="monospace">{this.state.output}</pre>
         </div>
       </div>
@@ -69,6 +69,7 @@ export default class Interpreter extends React.Component {
     let inst = [];
 
     for(let i = 0; i < lines.length; i++){
+      lines[i] = lines[i].trim();
       let split = lines[i].split(" ");
       //add empty param if needed
       if(typeof split[1] === 'undefined'){
@@ -76,7 +77,7 @@ export default class Interpreter extends React.Component {
       }
       split[1] = parseInt(split[1]) //convert string to int
       inst.push(split);
-      //error check
+      //error check (>1 parameter)
       if(split.length > 2){
         errorFlag = true;
         volatileFlag = true;
@@ -84,6 +85,23 @@ export default class Interpreter extends React.Component {
         inst = [];
         break;
       }
+      //extra error check (>0 params for 0 param calls)
+      if(split[0] == "PRINT" ||
+         split[0] == "ADD" ||
+         split[0] == "SUB" ||
+         split[0] == "SWAP" ||
+         split[0] == "DUP" ||
+         split[0] == "POP" ||
+         split[0] == "RET"
+       ) {
+         if(!isNaN(split[1])) {
+           errorFlag = true;
+           volatileFlag = true;
+           this._updateStatus("Syntax Error: unexpected argument on line " + (i+1));
+           inst = [];
+           break;
+         }
+       }
     };
 
     if(!errorFlag){
@@ -128,17 +146,17 @@ export default class Interpreter extends React.Component {
         case "JGE":
           // JGE X: if peek is >= 0, jump to X, else continue
           if(_stack[_stack.length - 1] >= 0){
-            pc = param;
+            _pc = param;
           } else {
-            pc++;
+            _pc++;
           }
           break;
         case "JEQ":
           // JEQ X: if peek is == 0, jump to X, else continue
           if(_stack[_stack.length - 1] == 0){
-            pc = param;
+            _pc = param;
           } else {
-            pc++;
+            _pc++;
           }
           break;
         case "SWAP":
@@ -147,12 +165,30 @@ export default class Interpreter extends React.Component {
           let swap_op2 = _stack.pop();
           _stack.push(swap_op1);
           _stack.push(swap_op2);
-          pc++;
+          _pc++;
           break;
         case "CALL":
           // CALL X: push pc+1 to stack, jump to X
-          _stack.push(pc + 1);
-          pc = param;
+          _stack.push(_pc + 1);
+          _pc = param;
+          break;
+        case "RET":
+          // RET: set pc to pop
+          _pc = _stack.pop();
+          break;
+        case "DUP":
+          // DUP: duplicate top of stack
+          _stack.push(_stack[_stack.length - 1]);
+          _pc++;
+          break;
+        case "POP":
+          // POP: pops (removes) top element
+          _stack.pop();
+          _pc++;
+          break;
+        case "EXIT":
+          // EXIT: terminates program (by setting pc to -1)
+          _pc = -1;
           break;
         case "PRINT":
           // PRINT: peek and print
