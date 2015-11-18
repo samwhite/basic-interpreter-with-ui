@@ -38,6 +38,60 @@ export default class Interpreter extends React.Component {
           <button className="btn btn-info" onClick={this._load}>Load</button>
           <button className="btn btn-warning" onClick={this._run} disabled={this.state.volatile}>Run</button>
           </div>
+          <table>
+          <thead>
+          <tr>
+          <th>Name</th>
+          <th>Description</th>
+          </tr>
+          </thead>
+          <tbody>
+          <tr>
+          <td><code>PRINT</code></td>
+          <td>Prints the top element</td>
+          </tr>
+          <tr>
+          <td><code>INT x</code></td>
+          <td>Pushes integer <code>x</code> to stack</td>
+          </tr>
+          <tr>
+          <td><code>ADD</code></td>
+          <td>Adds the top two elements</td>
+          </tr>
+          <tr>
+          <td><code>SUB</code></td>
+          <td>Subtracts the top two elements</td>
+          </tr>
+          <tr>
+          <td><code>SWAP</code></td>
+          <td>Swaps the two top elements</td>
+          </tr>
+          <tr>
+          <td><code>DUP</code></td>
+          <td>Duplicates top element</td>
+          </tr>
+          <tr>
+          <td><code>POP</code></td>
+          <td>Pops top element from stack (effectively just removes it)</td>
+          </tr>
+          <tr>
+          <td><code>JGE x</code></td>
+          <td>If top element is <code>&gt;=0</code>, jump to <code>x</code></td>
+          </tr>
+          <tr>
+          <td><code>JEQ x</code></td>
+          <td>If top element is <code>==0</code>, jump to <code>x</code></td>
+          </tr>
+          <tr>
+          <td><code>CALL x</code></td>
+          <td>Push <code>pc+1</code> to stack, jump to <code>x</code></td>
+          </tr>
+          <tr>
+          <td><code>RET</code></td>
+          <td>Pop top element, jump to it</td>
+          </tr>
+          </tbody>
+          </table>
         </div>
         <div className="col-md-4 side">
           <span className={this.state.statusClass}>{this.state.status}</span>
