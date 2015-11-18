@@ -116,6 +116,12 @@ export default class Interpreter extends React.Component {
           _stack.push(a + b);
           _pc++;
           break;
+        case "SUB":
+          let a = _stack.pop();
+          let b = _stack.pop();
+          _stack.push(a - b);
+          _pc++;
+          break;
         case "PRINT":
           _output = _output.concat(_stack[_stack.length - 1]).concat("\n");
           _pc++;
