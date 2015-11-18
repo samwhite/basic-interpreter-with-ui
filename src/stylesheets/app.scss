@@ -1,3 +1,16 @@
 .side {
-  background-color: #DDD;
+}
+
+.editor {
+  border: solid 1px grey;
+  font-family: 'Monaco', monospace;
+  width: 100%;
+}
+
+.buttons {
+  float: right;
+}
+
+.monospace {
+  font-family: 'Monaco', monospace;
 }
