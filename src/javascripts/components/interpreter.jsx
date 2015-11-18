@@ -59,22 +59,31 @@ export default class Interpreter extends React.Component {
       stack: [],
       pc: 0
     });
-
+    let errorFlag = false;
     let srctext = this.refs.sourceCode.value;
     let lines = srctext.match(/[^\r\n]+/g);
     let inst = [];
 
-    lines.forEach((line) => {
-      let split = line.split(" ");
+    for(let i = 0; i < lines.length; i++){
+      let split = lines[i].split(" ");
       //add empty param if needed
       if(typeof split[1] === 'undefined'){
         split.push("");
       }
       split[1] = parseInt(split[1]) //convert string to int
       inst.push(split);
-    });
+      //error check
+      if(split.length > 2){
+        errorFlag = true;
+        this._update_status("Syntax Error: too many arguments on line " + (i+1));
+        inst = [];
+        break;
+      }
+    };
 
-    this._update_status("Loaded");
+    if(!errorFlag){
+      this._update_status("Loaded");
+    }
     this.setState({
       instructions: inst
     });
@@ -106,13 +115,12 @@ export default class Interpreter extends React.Component {
           break;
         default:
           errorFlag = true;
+          this._update_status("Unknown instruction `" + instruction + "`");
           _pc = -1;
       }
       // check if we need to exit
       if(_pc == this.state.instructions.length || _pc == -1){
-        if(errorFlag){
-          this._update_status("Finished: Runtime Syntax Error!");
-        } else {
+        if(!errorFlag){
           this._update_status("Finished");
         }
         break;
@@ -135,11 +143,11 @@ export default class Interpreter extends React.Component {
       case "Finished":
         newClass = "label label-success";
         break;
-      case "Finished: Runtime Syntax Error!":
-        newClass = "label label-danger";
+      case "Ready":
+        newClass = "label label-primary";
         break;
       default:
-        newClass = "label label-primary";
+        newClass = "label label-danger";
     }
     this.setState({
       status: msg,
