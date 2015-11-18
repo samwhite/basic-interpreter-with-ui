@@ -14,9 +14,11 @@ export default class Interpreter extends React.Component {
           output: "",
           status: "Ready",
           statusClass: "label label-primary",
+          volatile: true
       };
       this._load = this._load.bind(this);
       this._run = this._run.bind(this);
+      this._setVolatile = this._setVolatile.bind(this);
 
   }
 
@@ -29,12 +31,13 @@ export default class Interpreter extends React.Component {
           <textarea className="editor"
                     rows="10"
                     defaultValue={this.state.defaultCode}
+                    onChange={this._setVolatile}
                     ref="sourceCode"
           ></textarea>
           <small>Implemented so far: INT, ADD, PRINT</small>
           <div className="buttons">
           <button className="btn btn-info" onClick={this._load}>Load</button>
-          <button className="btn btn-warning" onClick={this._run}>Run</button>
+          <button className="btn btn-warning" onClick={this._run} disabled={this.state.volatile}>Run</button>
           </div>
         </div>
         <div className="col-md-4 side">
@@ -59,6 +62,7 @@ export default class Interpreter extends React.Component {
       stack: [],
       pc: 0
     });
+    let volatileFlag = this.state.volatileFlag;
     let errorFlag = false;
     let srctext = this.refs.sourceCode.value.toUpperCase();
     let lines = srctext.match(/[^\r\n]+/g);
@@ -75,17 +79,20 @@ export default class Interpreter extends React.Component {
       //error check
       if(split.length > 2){
         errorFlag = true;
-        this._update_status("Syntax Error: too many arguments on line " + (i+1));
+        volatileFlag = true;
+        this._updateStatus("Syntax Error: too many arguments on line " + (i+1));
         inst = [];
         break;
       }
     };
 
     if(!errorFlag){
-      this._update_status("Loaded");
+      this._updateStatus("Loaded");
+      volatileFlag = false;
     }
     this.setState({
-      instructions: inst
+      instructions: inst,
+      volatile: volatileFlag
     });
   }
 
@@ -115,13 +122,13 @@ export default class Interpreter extends React.Component {
           break;
         default:
           errorFlag = true;
-          this._update_status("Unknown instruction `" + instruction + "`");
+          this._updateStatus("Unknown instruction `" + instruction + "`");
           _pc = -1;
       }
       // check if we need to exit
       if(_pc == this.state.instructions.length || _pc == -1){
         if(!errorFlag){
-          this._update_status("Finished");
+          this._updateStatus("Finished");
         }
         break;
       }
@@ -134,7 +141,13 @@ export default class Interpreter extends React.Component {
     });
   }
 
-  _update_status(msg) {
+  _setVolatile() {
+    this.setState({
+      volatile: true
+    });
+  }
+
+  _updateStatus(msg) {
     let newClass = "";
     switch(msg) {
       case "Loaded":
