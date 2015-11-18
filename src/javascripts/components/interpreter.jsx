@@ -38,6 +38,7 @@ export default class Interpreter extends React.Component {
           <button className="btn btn-info" onClick={this._load}>Load</button>
           <button className="btn btn-warning" onClick={this._run} disabled={this.state.volatile}>Run</button>
           </div>
+          <h5>Commands</h5>
           <table>
           <thead>
           <tr>
