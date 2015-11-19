@@ -13,6 +13,7 @@ export default class Interpreter extends React.Component {
           stack: [],
           pc: 0,
           output: "",
+          history: [],
           status: "Ready",
           statusClass: "label label-primary",
           volatile: true,
@@ -168,6 +169,7 @@ export default class Interpreter extends React.Component {
     this.setState({
       instructions: inst,
       labels: lbls,
+      history: [],
       volatile: volatileFlag,
       programModified: false
     });
@@ -286,6 +288,7 @@ export default class Interpreter extends React.Component {
     let _pc = this.state.pc;
     let errorFlag = false;
     let _output = this.state.output;
+    let _history = this.state.history;
 
     let instruction = this.state.instructions[_pc][0];
     let param = this.state.instructions[_pc][1];
@@ -378,13 +381,21 @@ export default class Interpreter extends React.Component {
         this._updateStatus("Finished");
       }
     } else {
+      //update history
+      let thisState = {
+        stack: _stack,
+        pc: _pc,
+        output: _output // TODO: keeps over-writing first push to stack ???
+      };
+      _history.push(thisState);
       this._updateStatus("Executed " + _pc + ": " + instruction + "(" + param + ").");
     }
     //update stack/pc for ui
     this.setState({
       stack: _stack,
       pc: _pc,
-      output: _output
+      output: _output,
+      history: _history
     });
   }
 
@@ -406,6 +417,7 @@ export default class Interpreter extends React.Component {
       stack: [],
       pc: 0,
       output: "",
+      history: [],
       volatile: false
     })
     this._updateStatus("Loaded");
