@@ -42,6 +42,7 @@ export default class Interpreter extends React.Component {
           <div className="buttons">
           <button className="btn btn-info btn-load" onClick={this._load}>Load Program {this.state.programModified ? "✎" : ""}</button>
           <button className="btn btn-danger" onClick={this._reset}>Reset</button>
+          <button className="btn btn-warning" disabled>←Step</button>
           <button className="btn btn-warning" onClick={this._runNextStep} disabled={this.state.volatile}>Step→</button>
           <button className="btn btn-success" onClick={this._runFull} disabled={this.state.volatile}>Continue</button>
           </div>
