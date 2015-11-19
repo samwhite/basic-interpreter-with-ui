@@ -18,7 +18,8 @@ export default class Interpreter extends React.Component {
           volatile: true
       };
       this._load = this._load.bind(this);
-      this._run = this._run.bind(this);
+      this._runFull = this._runFull.bind(this);
+      this._runNextStep = this._runNextStep.bind(this);
       this._setVolatile = this._setVolatile.bind(this);
 
   }
@@ -37,7 +38,8 @@ export default class Interpreter extends React.Component {
           ></textarea>
           <div className="buttons">
           <button className="btn btn-info" onClick={this._load}>Load</button>
-          <button className="btn btn-warning" onClick={this._run} disabled={this.state.volatile}>Run</button>
+          <button className="btn btn-warning" onClick={this._runNextStep}>→</button>
+          <button className="btn btn-danger" onClick={this._runFull} disabled={this.state.volatile}>Run</button>
           </div>
           <h5>Commands</h5>
           <table>
@@ -165,7 +167,7 @@ export default class Interpreter extends React.Component {
     });
   }
 
-  _run() {
+  _runFull() {
     let _stack = [];
     let _pc = 0;
     let errorFlag = false;
@@ -262,6 +264,110 @@ export default class Interpreter extends React.Component {
           this._updateStatus("Finished");
         }
         break;
+      }
+    }
+    //update stack/pc for ui
+    this.setState({
+      stack: _stack,
+      pc: _pc,
+      output: _output
+    });
+  }
+
+  _runNextStep() {
+    let _stack = this.state.stack;
+    let _pc = this.state.pc;
+    let errorFlag = false;
+    let _output = this.state.output;
+
+    let instruction = this.state.instructions[_pc][0];
+    let param = this.state.instructions[_pc][1];
+    switch(instruction) {
+      case "INT":
+        // INT 4: push 4 to stack
+        _stack.push(param);
+        _pc++;
+        break;
+      case "ADD":
+        // ADD: pop top two, add, push
+        let add_op1 = _stack.pop();
+        let add_op2 = _stack.pop();
+        _stack.push(add_op1 + add_op2);
+        _pc++;
+        break;
+      case "SUB":
+        // SUB: pop top two, sub, push
+        let sub_op1 = _stack.pop();
+        let sub_op2 = _stack.pop();
+        _stack.push(sub_op2 - sub_op1);
+        _pc++;
+        break;
+      case "JGE":
+        // JGE X: if peek is >= 0, jump to X, else continue
+        if(_stack[_stack.length - 1] >= 0){
+          // check if line number or label
+          if(typeof param === "number"){
+            _pc = param;
+          } else {
+            _pc = this.state.labels.get(param);
+          }
+        } else {
+          _pc++;
+        }
+        break;
+      case "JEQ":
+        // JEQ X: if peek is == 0, jump to X, else continue
+        if(_stack[_stack.length - 1] == 0){
+          _pc = param;
+        } else {
+          _pc++;
+        }
+        break;
+      case "SWAP":
+        // SWAP: swap top two elements
+        let swap_op1 = _stack.pop();
+        let swap_op2 = _stack.pop();
+        _stack.push(swap_op1);
+        _stack.push(swap_op2);
+        _pc++;
+        break;
+      case "CALL":
+        // CALL X: push pc+1 to stack, jump to X
+        _stack.push(_pc + 1);
+        _pc = param;
+        break;
+      case "RET":
+        // RET: set pc to pop
+        _pc = _stack.pop();
+        break;
+      case "DUP":
+        // DUP: duplicate top of stack
+        _stack.push(_stack[_stack.length - 1]);
+        _pc++;
+        break;
+      case "POP":
+        // POP: pops (removes) top element
+        _stack.pop();
+        _pc++;
+        break;
+      case "EXIT":
+        // EXIT: terminates program (by setting pc to -1)
+        _pc = -1;
+        break;
+      case "PRINT":
+        // PRINT: peek and print
+        _output = _output.concat(_stack[_stack.length - 1]).concat("\n");
+        _pc++;
+        break;
+      default:
+        errorFlag = true;
+        this._updateStatus("Unknown instruction `" + instruction + "`");
+        _pc = -1;
+    }
+    // check if we need to exit
+    if(_pc == this.state.instructions.length || _pc == -1){
+      if(!errorFlag){
+        this._updateStatus("Finished");
       }
     }
     //update stack/pc for ui
