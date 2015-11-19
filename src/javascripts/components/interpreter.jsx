@@ -15,12 +15,15 @@ export default class Interpreter extends React.Component {
           output: "",
           status: "Ready",
           statusClass: "label label-primary",
-          volatile: true
+          volatile: true,
+          programModified: false
       };
       this._load = this._load.bind(this);
       this._runFull = this._runFull.bind(this);
       this._runNextStep = this._runNextStep.bind(this);
       this._setVolatile = this._setVolatile.bind(this);
+      this._setModified = this._setModified.bind(this);
+      this._reset = this._reset.bind(this);
 
   }
 
@@ -33,13 +36,14 @@ export default class Interpreter extends React.Component {
           <textarea className="editor"
                     rows="10"
                     defaultValue={this.state.defaultCode}
-                    onChange={this._setVolatile}
+                    onChange={this._setModified}
                     ref="sourceCode"
           ></textarea>
           <div className="buttons">
-          <button className="btn btn-info" onClick={this._load}>Load</button>
-          <button className="btn btn-warning" onClick={this._runNextStep}>→</button>
-          <button className="btn btn-danger" onClick={this._runFull} disabled={this.state.volatile}>Run</button>
+          <button className="btn btn-info btn-load" onClick={this._load}>Load Program {this.state.programModified ? "✎" : ""}</button>
+          <button className="btn btn-danger" onClick={this._reset}>Reset</button>
+          <button className="btn btn-warning" onClick={this._runNextStep} disabled={this.state.volatile}>Step→</button>
+          <button className="btn btn-success" onClick={this._runFull} disabled={this.state.volatile}>Continue</button>
           </div>
           <h5>Commands</h5>
           <table>
@@ -163,7 +167,8 @@ export default class Interpreter extends React.Component {
     this.setState({
       instructions: inst,
       labels: lbls,
-      volatile: volatileFlag
+      volatile: volatileFlag,
+      programModified: false
     });
   }
 
@@ -261,6 +266,7 @@ export default class Interpreter extends React.Component {
       // check if we need to exit
       if(_pc == this.state.instructions.length || _pc == -1){
         if(!errorFlag){
+          this._setVolatile();
           this._updateStatus("Finished");
         }
         break;
@@ -367,8 +373,11 @@ export default class Interpreter extends React.Component {
     // check if we need to exit
     if(_pc == this.state.instructions.length || _pc == -1){
       if(!errorFlag){
+        this._setVolatile();
         this._updateStatus("Finished");
       }
+    } else {
+      this._updateStatus("Executed " + _pc + ": " + instruction + "(" + param + ").");
     }
     //update stack/pc for ui
     this.setState({
@@ -382,19 +391,39 @@ export default class Interpreter extends React.Component {
     this.setState({
       volatile: true
     });
+    this._updateStatus("Ready");
+  }
+
+  _setModified() {
+    this.setState({
+      programModified: true
+    });
+  }
+
+  _reset() {
+    this.setState({
+      stack: [],
+      pc: 0,
+      output: "",
+      volatile: false
+    })
+    this._updateStatus("Loaded");
   }
 
   _updateStatus(msg) {
     let newClass = "";
-    switch(msg) {
-      case "Loaded":
+    switch(msg.substring(0, 5)) {
+      case "Loade":
         newClass = "label label-info";
         break;
-      case "Finished":
+      case "Finis":
         newClass = "label label-success";
         break;
       case "Ready":
         newClass = "label label-primary";
+        break;
+      case "Execu":
+        newClass = "label label-warning";
         break;
       default:
         newClass = "label label-danger";
