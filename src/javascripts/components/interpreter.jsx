@@ -13,6 +13,7 @@ export default class Interpreter extends React.Component {
           stack: [],
           pc: 0,
           output: "",
+          varStore: new Map(),
           history: [],
           status: "Ready",
           statusClass: "label label-primary",
@@ -62,8 +63,8 @@ export default class Interpreter extends React.Component {
           <td>Prints the top element</td>
           </tr>
           <tr>
-          <td><code>INT x</code></td>
-          <td>Pushes integer <code>x</code> to stack</td>
+          <td><code>INT n</code></td>
+          <td>Pushes integer <code>n</code> to stack</td>
           </tr>
           <tr>
           <td><code>ADD</code></td>
@@ -98,16 +99,16 @@ export default class Interpreter extends React.Component {
           <td>Pops top element from stack (effectively just removes it)</td>
           </tr>
           <tr>
-          <td><code>JGE x</code></td>
-          <td>If top element is <code>&gt;=0</code>, jump to <code>x</code></td>
+          <td><code>JGE l</code></td>
+          <td>If top element is <code>&gt;=0</code>, jump to <code>l</code></td>
           </tr>
           <tr>
-          <td><code>JEQ x</code></td>
-          <td>If top element is <code>==0</code>, jump to <code>x</code></td>
+          <td><code>JEQ l</code></td>
+          <td>If top element is <code>==0</code>, jump to <code>l</code></td>
           </tr>
           <tr>
-          <td><code>CALL x</code></td>
-          <td>Push <code>pc+1</code> to stack, jump to <code>x</code></td>
+          <td><code>CALL l</code></td>
+          <td>Push <code>pc+1</code> to stack, jump to <code>l</code></td>
           </tr>
           <tr>
           <td><code>RET</code></td>
@@ -129,6 +130,8 @@ export default class Interpreter extends React.Component {
           <pre className="monospace">{this.state.output}</pre>
           <h5>History:</h5>
           <pre className="monospace">{JSON.stringify(this.state.history)}</pre>
+          <h5>Variable Store:</h5>
+          <pre className="monospace">{JSON.stringify(this.state.varStore)}</pre>
         </div>
       </div>
       </div>
@@ -140,7 +143,7 @@ export default class Interpreter extends React.Component {
     this.setState({
       output: "",
       stack: [],
-      pc: 0
+      pc: 0,
     });
     let volatileFlag = this.state.volatileFlag;
     let errorFlag = false;
@@ -148,6 +151,7 @@ export default class Interpreter extends React.Component {
     let lines = srctext.match(/[^\r\n]+/g);
     let inst = [];
     let lbls = new Map();
+    let vars = new Map();
 
     for(let i = 0; i < lines.length; i++){
       lines[i] = lines[i].trim();
@@ -184,6 +188,7 @@ export default class Interpreter extends React.Component {
     this.setState({
       instructions: inst,
       labels: lbls,
+      varStore: vars,
       history: [],
       volatile: volatileFlag,
       programModified: false
@@ -195,6 +200,7 @@ export default class Interpreter extends React.Component {
     let _pc = 0;
     let errorFlag = false;
     let _output = "";
+    let _varStore = new Map();
 
     while(true){
       let instruction = this.state.instructions[_pc][0];
@@ -303,6 +309,16 @@ export default class Interpreter extends React.Component {
           _stack.pop();
           _pc++;
           break;
+        case "VAR_SET":
+          // VAR_SET x: sets the variable x to the (peeked) top of the stack.
+          _varStore[param] = _stack[_stack.length - 1];
+          _pc++;
+          break;
+        case "VAR_LOOKUP":
+          // VAR_LOOKUP x: lookup x and push to the stack
+          _stack.push(_varStore[param]);
+          _pc++;
+          break;
         case "EXIT":
           // EXIT: terminates program (by setting pc to -1)
           _pc = -1;
@@ -330,7 +346,8 @@ export default class Interpreter extends React.Component {
     this.setState({
       stack: _stack,
       pc: _pc,
-      output: _output
+      output: _output,
+      varStore: _varStore
     });
   }
 
@@ -340,6 +357,7 @@ export default class Interpreter extends React.Component {
     let errorFlag = false;
     let _output = this.state.output;
     let _history = this.state.history;
+    let _varStore = this.state.varStore;
 
     let instruction = this.state.instructions[_pc][0];
     let param = this.state.instructions[_pc][1];
@@ -447,6 +465,16 @@ export default class Interpreter extends React.Component {
         _stack.pop();
         _pc++;
         break;
+      case "VAR_SET":
+        // VAR_SET x: sets the variable x to the (peeked) top of the stack.
+        _varStore[param] = _stack[_stack.length - 1];
+        _pc++;
+        break;
+      case "VAR_LOOKUP":
+        // VAR_LOOKUP x: lookup x and push to the stack
+        _stack.push(_varStore[param]);
+        _pc++;
+        break;
       case "EXIT":
         // EXIT: terminates program (by setting pc to -1)
         _pc = -1;
@@ -471,6 +499,7 @@ export default class Interpreter extends React.Component {
       //update history
       let thisState = {
         stack: eval("("+JSON.stringify(_stack)+")"), // trick to clone new object
+        varStore: _varStore,
         pc: _pc,
         output: _output
       };
@@ -483,7 +512,8 @@ export default class Interpreter extends React.Component {
       stack: _stack,
       pc: _pc,
       output: _output,
-      history: _history
+      history: _history,
+      varStore: _varStore
     });
   }
 
@@ -521,6 +551,7 @@ export default class Interpreter extends React.Component {
       stack: [],
       pc: 0,
       output: "",
+      varStore: new Map(),
       history: [],
       volatile: false
     })
