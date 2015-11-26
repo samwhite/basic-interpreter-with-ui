@@ -13,13 +13,19 @@ export default class Interpreter extends React.Component {
           stack: [],
           pc: 0,
           output: "",
+          history: [],
           status: "Ready",
           statusClass: "label label-primary",
-          volatile: true
+          volatile: true,
+          programModified: false
       };
       this._load = this._load.bind(this);
-      this._run = this._run.bind(this);
+      this._runFull = this._runFull.bind(this);
+      this._runNextStep = this._runNextStep.bind(this);
+      this._previousStep = this._previousStep.bind(this);
       this._setVolatile = this._setVolatile.bind(this);
+      this._setModified = this._setModified.bind(this);
+      this._reset = this._reset.bind(this);
 
   }
 
@@ -32,12 +38,15 @@ export default class Interpreter extends React.Component {
           <textarea className="editor"
                     rows="10"
                     defaultValue={this.state.defaultCode}
-                    onChange={this._setVolatile}
+                    onChange={this._setModified}
                     ref="sourceCode"
           ></textarea>
           <div className="buttons">
-          <button className="btn btn-info" onClick={this._load}>Load</button>
-          <button className="btn btn-warning" onClick={this._run} disabled={this.state.volatile}>Run</button>
+          <button className="btn btn-info btn-load" onClick={this._load}>Load Program {this.state.programModified ? "✎" : ""}</button>
+          <button className="btn btn-danger" onClick={this._reset}>Reset</button>
+          <button className="btn btn-warning" onClick={this._previousStep} disabled={this.state.volatile}>←Step</button>
+          <button className="btn btn-warning" onClick={this._runNextStep} disabled={this.state.volatile}>Step→</button>
+          <button className="btn btn-success" onClick={this._runFull} disabled={this.state.volatile}>Continue</button>
           </div>
           <h5>Commands</h5>
           <table>
@@ -106,6 +115,8 @@ export default class Interpreter extends React.Component {
           <p className="monospace">{JSON.stringify(this.state.instructions)}</p>
           <h5>Output:</h5>
           <pre className="monospace">{this.state.output}</pre>
+          <h5>History:</h5>
+          <pre className="monospace">{JSON.stringify(this.state.history)}</pre>
         </div>
       </div>
       </div>
@@ -161,11 +172,13 @@ export default class Interpreter extends React.Component {
     this.setState({
       instructions: inst,
       labels: lbls,
-      volatile: volatileFlag
+      history: [],
+      volatile: volatileFlag,
+      programModified: false
     });
   }
 
-  _run() {
+  _runFull() {
     let _stack = [];
     let _pc = 0;
     let errorFlag = false;
@@ -259,6 +272,7 @@ export default class Interpreter extends React.Component {
       // check if we need to exit
       if(_pc == this.state.instructions.length || _pc == -1){
         if(!errorFlag){
+          this._setVolatile();
           this._updateStatus("Finished");
         }
         break;
@@ -272,23 +286,180 @@ export default class Interpreter extends React.Component {
     });
   }
 
+  _runNextStep() {
+    let _stack = this.state.stack;
+    let _pc = this.state.pc;
+    let errorFlag = false;
+    let _output = this.state.output;
+    let _history = this.state.history;
+
+    let instruction = this.state.instructions[_pc][0];
+    let param = this.state.instructions[_pc][1];
+    switch(instruction) {
+      case "INT":
+        // INT 4: push 4 to stack
+        _stack.push(param);
+        _pc++;
+        break;
+      case "ADD":
+        // ADD: pop top two, add, push
+        let add_op1 = _stack.pop();
+        let add_op2 = _stack.pop();
+        _stack.push(add_op1 + add_op2);
+        _pc++;
+        break;
+      case "SUB":
+        // SUB: pop top two, sub, push
+        let sub_op1 = _stack.pop();
+        let sub_op2 = _stack.pop();
+        _stack.push(sub_op2 - sub_op1);
+        _pc++;
+        break;
+      case "JGE":
+        // JGE X: if peek is >= 0, jump to X, else continue
+        if(_stack[_stack.length - 1] >= 0){
+          // check if line number or label
+          if(typeof param === "number"){
+            _pc = param;
+          } else {
+            _pc = this.state.labels.get(param);
+          }
+        } else {
+          _pc++;
+        }
+        break;
+      case "JEQ":
+        // JEQ X: if peek is == 0, jump to X, else continue
+        if(_stack[_stack.length - 1] == 0){
+          _pc = param;
+        } else {
+          _pc++;
+        }
+        break;
+      case "SWAP":
+        // SWAP: swap top two elements
+        let swap_op1 = _stack.pop();
+        let swap_op2 = _stack.pop();
+        _stack.push(swap_op1);
+        _stack.push(swap_op2);
+        _pc++;
+        break;
+      case "CALL":
+        // CALL X: push pc+1 to stack, jump to X
+        _stack.push(_pc + 1);
+        _pc = param;
+        break;
+      case "RET":
+        // RET: set pc to pop
+        _pc = _stack.pop();
+        break;
+      case "DUP":
+        // DUP: duplicate top of stack
+        _stack.push(_stack[_stack.length - 1]);
+        _pc++;
+        break;
+      case "POP":
+        // POP: pops (removes) top element
+        _stack.pop();
+        _pc++;
+        break;
+      case "EXIT":
+        // EXIT: terminates program (by setting pc to -1)
+        _pc = -1;
+        break;
+      case "PRINT":
+        // PRINT: peek and print
+        _output = _output.concat(_stack[_stack.length - 1]).concat("\n");
+        _pc++;
+        break;
+      default:
+        errorFlag = true;
+        this._updateStatus("Unknown instruction `" + instruction + "`");
+        _pc = -1;
+    }
+    // check if we need to exit
+    if(_pc == this.state.instructions.length || _pc == -1){
+      if(!errorFlag){
+        this._setVolatile();
+        this._updateStatus("Finished");
+      }
+    } else {
+      //update history
+      let thisState = {
+        stack: eval("("+JSON.stringify(_stack)+")"), // trick to clone new object
+        pc: _pc,
+        output: _output
+      };
+      Object.freeze(thisState);
+      _history.push(thisState);
+      this._updateStatus("Executed " + _pc + ": " + instruction + "(" + param + ").");
+    }
+    //update stack/pc for ui
+    this.setState({
+      stack: _stack,
+      pc: _pc,
+      output: _output,
+      history: _history
+    });
+  }
+
+  _previousStep() {
+    if(this.state.history.length == 0){
+      this._updateStatus("Cannot step back further");
+      return;
+    }
+    let newHistory = this.state.history;
+    let newState = this.state.history.pop();
+    this.setState({
+      stack: newState["stack"],
+      pc: newState["pc"],
+      output: newState["output"],
+      history: newHistory
+    });
+    this._updateStatus("Stepped back");
+  }
+
   _setVolatile() {
     this.setState({
       volatile: true
     });
+    this._updateStatus("Ready");
+  }
+
+  _setModified() {
+    this.setState({
+      programModified: true
+    });
+  }
+
+  _reset() {
+    this.setState({
+      stack: [],
+      pc: 0,
+      output: "",
+      history: [],
+      volatile: false
+    })
+    this._updateStatus("Loaded");
   }
 
   _updateStatus(msg) {
     let newClass = "";
-    switch(msg) {
-      case "Loaded":
+    switch(msg.substring(0, 5)) {
+      case "Loade":
         newClass = "label label-info";
         break;
-      case "Finished":
+      case "Finis":
         newClass = "label label-success";
         break;
       case "Ready":
         newClass = "label label-primary";
+        break;
+      case "Execu":
+        newClass = "label label-warning";
+        break;
+      case "Stepp":
+        newClass = "label label-warning";
         break;
       default:
         newClass = "label label-danger";
