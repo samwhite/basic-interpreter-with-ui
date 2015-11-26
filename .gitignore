@@ -28,3 +28,6 @@ node_modules
 
 # Compiled assets
 dist/assets/**/*
+
+# Python source
+_py/**/*
