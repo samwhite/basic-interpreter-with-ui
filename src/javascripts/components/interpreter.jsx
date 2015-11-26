@@ -114,6 +114,8 @@ export default class Interpreter extends React.Component {
           <p className="monospace">{JSON.stringify(this.state.instructions)}</p>
           <h5>Output:</h5>
           <pre className="monospace">{this.state.output}</pre>
+          <h5>History:</h5>
+          <pre className="monospace">{JSON.stringify(this.state.history)}</pre>
         </div>
       </div>
       </div>
@@ -383,10 +385,11 @@ export default class Interpreter extends React.Component {
     } else {
       //update history
       let thisState = {
-        stack: _stack,
+        stack: eval("("+JSON.stringify(_stack)+")"),
         pc: _pc,
         output: _output // TODO: keeps over-writing first push to stack ???
       };
+      Object.freeze(thisState);
       _history.push(thisState);
       this._updateStatus("Executed " + _pc + ": " + instruction + "(" + param + ").");
     }
