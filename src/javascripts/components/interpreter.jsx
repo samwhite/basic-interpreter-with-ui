@@ -99,6 +99,14 @@ export default class Interpreter extends React.Component {
           <td>Pops top element from stack (effectively just removes it)</td>
           </tr>
           <tr>
+          <td><code>VAR_SET x</code></td>
+          <td>Sets the variable <code>x</code> to the (peeked) top of the stack.</td>
+          </tr>
+          <tr>
+          <td><code>VAR_LOOKUP y</code></td>
+          <td>Looks up the variable <code>y</code> and pushes it to the stack.</td>
+          </tr>
+          <tr>
           <td><code>JGE l</code></td>
           <td>If top element is <code>&gt;=0</code>, jump to <code>l</code></td>
           </tr>
@@ -119,19 +127,17 @@ export default class Interpreter extends React.Component {
           <strong>Note:</strong> Labels can be prepended to lines, e.g. <code>L1: PRINT</code> (note space between the label and command).
         </div>
         <div className="col-md-4 side">
-          <span className={this.state.statusClass}>{this.state.status}</span>
-          <h5>PC:</h5>
-          <span className="monospace">{this.state.pc}</span>
-          <h5>Stack:</h5>
-          <p className="monospace">{JSON.stringify(this.state.stack)}</p>
+          <p className={this.state.statusClass}>{this.state.status}</p>
           <h5>Loaded instructions:</h5>
-          <p className="monospace">{JSON.stringify(this.state.instructions)}</p>
-          <h5>Output:</h5>
-          <pre className="monospace">{this.state.output}</pre>
-          <h5>History:</h5>
-          <pre className="monospace">{JSON.stringify(this.state.history)}</pre>
+          <pre className="monospace">{JSON.stringify(this.state.instructions)}</pre>
+          <h5>PC:</h5>
+          <pre className="monospace">{this.state.pc}</pre>
+          <h5>Stack:</h5>
+          <pre className="monospace">{JSON.stringify(this.state.stack)}</pre>
           <h5>Variable Store:</h5>
           <pre className="monospace">{JSON.stringify(this.state.varStore)}</pre>
+          <h4>Output:</h4>
+          <pre className="monospace">{this.state.output}</pre>
         </div>
       </div>
       </div>
