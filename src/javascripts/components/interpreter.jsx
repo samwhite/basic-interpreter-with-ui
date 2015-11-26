@@ -150,6 +150,8 @@ export default class Interpreter extends React.Component {
       output: "",
       stack: [],
       pc: 0,
+      varStore: new Map(),
+      history: []
     });
     let volatileFlag = this.state.volatileFlag;
     let errorFlag = false;
