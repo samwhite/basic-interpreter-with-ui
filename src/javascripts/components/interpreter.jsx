@@ -22,6 +22,7 @@ export default class Interpreter extends React.Component {
       this._load = this._load.bind(this);
       this._runFull = this._runFull.bind(this);
       this._runNextStep = this._runNextStep.bind(this);
+      this._previousStep = this._previousStep.bind(this);
       this._setVolatile = this._setVolatile.bind(this);
       this._setModified = this._setModified.bind(this);
       this._reset = this._reset.bind(this);
@@ -43,7 +44,7 @@ export default class Interpreter extends React.Component {
           <div className="buttons">
           <button className="btn btn-info btn-load" onClick={this._load}>Load Program {this.state.programModified ? "✎" : ""}</button>
           <button className="btn btn-danger" onClick={this._reset}>Reset</button>
-          <button className="btn btn-warning" disabled>←Step</button>
+          <button className="btn btn-warning" onClick={this._previousStep} disabled={this.state.volatile}>←Step</button>
           <button className="btn btn-warning" onClick={this._runNextStep} disabled={this.state.volatile}>Step→</button>
           <button className="btn btn-success" onClick={this._runFull} disabled={this.state.volatile}>Continue</button>
           </div>
@@ -385,9 +386,9 @@ export default class Interpreter extends React.Component {
     } else {
       //update history
       let thisState = {
-        stack: eval("("+JSON.stringify(_stack)+")"),
+        stack: eval("("+JSON.stringify(_stack)+")"), // trick to clone new object
         pc: _pc,
-        output: _output // TODO: keeps over-writing first push to stack ???
+        output: _output
       };
       Object.freeze(thisState);
       _history.push(thisState);
@@ -400,6 +401,22 @@ export default class Interpreter extends React.Component {
       output: _output,
       history: _history
     });
+  }
+
+  _previousStep() {
+    if(this.state.history.length == 0){
+      this._updateStatus("Cannot step back further");
+      return;
+    }
+    let newHistory = this.state.history;
+    let newState = this.state.history.pop();
+    this.setState({
+      stack: newState["stack"],
+      pc: newState["pc"],
+      output: newState["output"],
+      history: newHistory
+    });
+    this._updateStatus("Stepped back");
   }
 
   _setVolatile() {
@@ -439,6 +456,9 @@ export default class Interpreter extends React.Component {
         newClass = "label label-primary";
         break;
       case "Execu":
+        newClass = "label label-warning";
+        break;
+      case "Stepp":
         newClass = "label label-warning";
         break;
       default:
