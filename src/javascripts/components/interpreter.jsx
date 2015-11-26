@@ -207,6 +207,39 @@ export default class Interpreter extends React.Component {
           _stack.push(sub_op2 - sub_op1);
           _pc++;
           break;
+        case "EQUALS":
+          // EQUALS: push (lhs == rhs), pop rhs first then pop lhs
+          //         1 for true, 0 for false
+          let eq_rhs = _stack.pop();
+          let eq_lhs = _stack.pop();
+          if(eq_lhs == eq_rhs){
+            _stack.push(1);
+          } else {
+            _stack.push(0);
+          }
+          break;
+        case "LESS_THAN":
+          // LESS_THAN: push (lhs < rhs), pop rhs first then pop lhs
+          //         1 for true, 0 for false
+          let lt_rhs = _stack.pop();
+          let lt_lhs = _stack.pop();
+          if(lt_lhs < lt_rhs){
+            _stack.push(1);
+          } else {
+            _stack.push(0);
+          }
+          break;
+        case "MORE_THAN":
+          // MORE_THAN: push (lhs > rhs), pop rhs first then pop lhs
+          //         1 for true, 0 for false
+          let gt_rhs = _stack.pop();
+          let gt_lhs = _stack.pop();
+          if(gt_lhs > gt_rhs){
+            _stack.push(1);
+          } else {
+            _stack.push(0);
+          }
+          break;
         case "JGE":
           // JGE X: if peek is >= 0, jump to X, else continue
           if(_stack[_stack.length - 1] >= 0){
