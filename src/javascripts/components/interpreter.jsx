@@ -1,13 +1,20 @@
 import React from "react";
+import Brace from "brace";
+import AceEditor from "react-ace";
+import "brace/mode/java";
+import "brace/theme/github";
 
 export default class Interpreter extends React.Component {
   static propTypes = {};
-  static defaultProps = {};
+  static defaultProps = {
+    editorFontSize: 16,
+    editorPrintMargin: false
+  };
 
   constructor(props) {
       super(props);
       this.state = {
-          defaultCode: "INT 2\nINT 3\nADD\nPRINT",
+          editorText: "INT 2\nINT 3\nADD\nPRINT",
           instructions: [],
           labels: new Map(),
           stack: [],
@@ -20,6 +27,7 @@ export default class Interpreter extends React.Component {
           volatile: true,
           programModified: false
       };
+      this._handleEditorChange = this._handleEditorChange.bind(this);
       this._load = this._load.bind(this);
       this._runFull = this._runFull.bind(this);
       this._runNextStep = this._runNextStep.bind(this);
@@ -36,12 +44,18 @@ export default class Interpreter extends React.Component {
       <div className="row">
         <div className="col-md-8 main">
           <h4>Editor</h4>
-          <textarea className="editor"
-                    rows="10"
-                    defaultValue={this.state.defaultCode}
-                    onChange={this._setModified}
-                    ref="sourceCode"
-          ></textarea>
+          <AceEditor
+            mode="java"
+            theme="github"
+            name="editor"
+            editorProps={{$blockScrolling: Infinity}}
+            fontSize={this.props.editorFontSize}
+            width="auto"
+            height="300px"
+            value={this.state.editorText}
+            showPrintMargin={this.props.editorPrintMargin}
+            onChange={this._handleEditorChange}
+          />
           <div className="buttons">
           <button className="btn btn-info btn-load" onClick={this._load}>Load Program {this.state.programModified ? "✎" : ""}</button>
           <button className="btn btn-danger" onClick={this._reset}>Reset</button>
@@ -144,6 +158,12 @@ export default class Interpreter extends React.Component {
     );
   }
 
+  _handleEditorChange(newValue){
+    this.setState({
+      editorText: newValue
+    });
+  }
+
   _load() {
     //reset ui
     this.setState({
@@ -155,7 +175,7 @@ export default class Interpreter extends React.Component {
     });
     let volatileFlag = this.state.volatileFlag;
     let errorFlag = false;
-    let srctext = this.refs.sourceCode.value.toUpperCase();
+    let srctext = this.state.editorText.toUpperCase();
     let lines = srctext.match(/[^\r\n]+/g);
     let inst = [];
     let lbls = new Map();
