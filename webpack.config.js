@@ -41,7 +41,12 @@ module.exports = {
     ]
   },
   plugins: [
-      new ExtractTextPlugin("bundle.css", { allChunks: true })
+      new ExtractTextPlugin("bundle.css", { allChunks: true }),
+      new webpack.ProvidePlugin({
+        $: "jquery",
+        jQuery: "jquery",
+        "window.jQuery": "jquery"
+      })
   ],
   stats: {
     children: false

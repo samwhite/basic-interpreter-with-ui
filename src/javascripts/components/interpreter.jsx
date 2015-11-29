@@ -36,7 +36,7 @@ export default class Interpreter extends React.Component {
       <div className="row">
         <div className="col-md-8 main">
           <textarea className="editor"
-                    rows="11"
+                    rows="12"
                     defaultValue={this.state.defaultCode}
                     onChange={this._setModified}
                     ref="sourceCode"
