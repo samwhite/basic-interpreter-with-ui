@@ -168,6 +168,9 @@ export default class Interpreter extends React.Component {
 
     for(let i = 0; i < lines.length; i++){
       lines[i] = lines[i].trim();
+      if(lines[i].length == 0){
+        continue;
+      }
       // check for label
       if(lines[i].indexOf(":") > -1){
         let lbl = lines[i].substring(0, lines[i].indexOf(":"));
