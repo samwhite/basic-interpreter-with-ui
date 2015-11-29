@@ -1,9 +1,9 @@
-.side {
-}
+$grey: #808080;
+$mono: 'Monaco', monospace;
 
 .editor {
-  border: solid 1px grey;
-  font-family: 'Monaco', monospace;
+  border: solid 1px $grey;
+  font-family: $mono;
   width: 100%;
 }
 
@@ -21,7 +21,7 @@
 }
 
 .monospace {
-  font-family: 'Monaco', monospace;
+  font-family: $mono;
 }
 
 .footer {

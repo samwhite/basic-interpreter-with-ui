@@ -100,19 +100,23 @@ export default class Interpreter extends React.Component {
           </tr>
           <tr>
           <td><code>VAR_SET x</code></td>
-          <td>Sets the variable <code>x</code> to the (peeked) top of the stack.</td>
+          <td>Sets the variable <code>x</code> to the (peeked) top of the stack</td>
           </tr>
           <tr>
           <td><code>VAR_LOOKUP y</code></td>
-          <td>Looks up the variable <code>y</code> and pushes it to the stack.</td>
+          <td>Looks up the variable <code>y</code> and pushes it to the stack</td>
           </tr>
           <tr>
           <td><code>JGE l</code></td>
-          <td>If top element is <code>&gt;=0</code>, jump to <code>l</code></td>
+          <td>If top element is <code>&gt;=0</code>, jump to <code>l</code> (can be a line number or label)</td>
           </tr>
           <tr>
           <td><code>JEQ l</code></td>
-          <td>If top element is <code>==0</code>, jump to <code>l</code></td>
+          <td>If top element is <code>==0</code>, jump to <code>l</code> (can be a line number or label)</td>
+          </tr>
+          <tr>
+          <td><code>JMP l</code></td>
+          <td>Jump to <code>l</code> (can be a line number or label)</td>
           </tr>
           <tr>
           <td><code>CALL l</code></td>
@@ -124,20 +128,18 @@ export default class Interpreter extends React.Component {
           </tr>
           </tbody>
           </table>
-          <strong>Note:</strong> Labels can be prepended to lines, e.g. <code>L1: PRINT</code> (note space between the label and command).
+          <strong>Labels</strong> can be prepended to lines, e.g. <code>L1: PRINT</code> (the space between the colon and command is important).
         </div>
         <div className="col-md-4 side">
           <p className={this.state.statusClass}>{this.state.status}</p>
-          <h5>Loaded instructions:</h5>
-          <pre className="monospace">{JSON.stringify(this.state.instructions)}</pre>
+          <h4>Output:</h4>
+          <pre className="monospace">{this.state.output}</pre>
           <h5>PC:</h5>
           <pre className="monospace">{this.state.pc}</pre>
           <h5>Stack:</h5>
           <pre className="monospace">{JSON.stringify(this.state.stack)}</pre>
-          <h5>Variable Store:</h5>
-          <pre className="monospace">{JSON.stringify(this.state.varStore)}</pre>
-          <h4>Output:</h4>
-          <pre className="monospace">{this.state.output}</pre>
+          <h5>Loaded instructions:</h5>
+          <pre className="monospace">{JSON.stringify(this.state.instructions)}</pre>
         </div>
       </div>
       </div>
@@ -271,6 +273,7 @@ export default class Interpreter extends React.Component {
           break;
         case "JGE":
           // JGE X: if peek is >= 0, jump to X, else continue
+          // X may be a label or line number
           if(_stack[_stack.length - 1] >= 0){
             // check if line number or label
             if(typeof param === "number"){
@@ -284,10 +287,24 @@ export default class Interpreter extends React.Component {
           break;
         case "JEQ":
           // JEQ X: if peek is == 0, jump to X, else continue
+          // X may be a label or line number
           if(_stack[_stack.length - 1] == 0){
-            _pc = param;
+            // check if line number or label
+            if(typeof param === "number"){
+              _pc = param;
+            } else {
+              _pc = this.state.labels.get(param);
+            }
           } else {
             _pc++;
+          }
+          break;
+        case "JMP":
+          // JMP L: jump to line L or label L
+          if(typeof param === "number"){
+            _pc = param;
+          } else {
+            _pc = this.state.labels.get(param);
           }
           break;
         case "SWAP":
@@ -319,12 +336,12 @@ export default class Interpreter extends React.Component {
           break;
         case "VAR_SET":
           // VAR_SET x: sets the variable x to the (peeked) top of the stack.
-          _varStore[param] = _stack[_stack.length - 1];
+          _varStore.set(param, _stack[_stack.length - 1]);
           _pc++;
           break;
         case "VAR_LOOKUP":
           // VAR_LOOKUP x: lookup x and push to the stack
-          _stack.push(_varStore[param]);
+          _stack.push(_varStore.get(param));
           _pc++;
           break;
         case "EXIT":
@@ -427,6 +444,7 @@ export default class Interpreter extends React.Component {
         break;
       case "JGE":
         // JGE X: if peek is >= 0, jump to X, else continue
+        // X may be a label or line number
         if(_stack[_stack.length - 1] >= 0){
           // check if line number or label
           if(typeof param === "number"){
@@ -440,10 +458,24 @@ export default class Interpreter extends React.Component {
         break;
       case "JEQ":
         // JEQ X: if peek is == 0, jump to X, else continue
+        // X may be a label or line number
         if(_stack[_stack.length - 1] == 0){
-          _pc = param;
+          // check if line number or label
+          if(typeof param === "number"){
+            _pc = param;
+          } else {
+            _pc = this.state.labels.get(param);
+          }
         } else {
           _pc++;
+        }
+        break;
+      case "JMP":
+        // JMP L: jump to line L or label L
+        if(typeof param === "number"){
+          _pc = param;
+        } else {
+          _pc = this.state.labels.get(param);
         }
         break;
       case "SWAP":
@@ -475,12 +507,12 @@ export default class Interpreter extends React.Component {
         break;
       case "VAR_SET":
         // VAR_SET x: sets the variable x to the (peeked) top of the stack.
-        _varStore[param] = _stack[_stack.length - 1];
+        _varStore.set(param, _stack[_stack.length - 1]);
         _pc++;
         break;
       case "VAR_LOOKUP":
         // VAR_LOOKUP x: lookup x and push to the stack
-        _stack.push(_varStore[param]);
+        _stack.push(_varStore.get(param));
         _pc++;
         break;
       case "EXIT":
@@ -513,7 +545,7 @@ export default class Interpreter extends React.Component {
       };
       Object.freeze(thisState);
       _history.push(thisState);
-      this._updateStatus("Executed " + _pc + ": " + instruction + "(" + param + ").");
+      this._updateStatus("Executed " + instruction + "(" + param + ").");
     }
     //update stack/pc for ui
     this.setState({
