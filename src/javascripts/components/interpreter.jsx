@@ -119,7 +119,7 @@ export default class Interpreter extends React.Component {
           </tr>
           <tr>
           <td><code>CALL l</code></td>
-          <td>Push <code>pc+1</code> to stack, jump to <code>l</code></td>
+          <td>Push <code>pc+1</code> to stack, jump to <code>l</code> (can be a line number or label)</td>
           </tr>
           <tr>
           <td><code>RET</code></td>
@@ -322,9 +322,13 @@ export default class Interpreter extends React.Component {
           _pc++;
           break;
         case "CALL":
-          // CALL X: push pc+1 to stack, jump to X
+          // CALL L: push pc+1 to stack, jump to L (may be line or number)
           _stack.push(_pc + 1);
-          _pc = param;
+          if(typeof param === "number"){
+            _pc = param;
+          } else {
+            _pc = this.state.labels.get(param);
+          }
           break;
         case "RET":
           // RET: set pc to pop
@@ -493,9 +497,13 @@ export default class Interpreter extends React.Component {
         _pc++;
         break;
       case "CALL":
-        // CALL X: push pc+1 to stack, jump to X
+        // CALL L: push pc+1 to stack, jump to L (may be line or number)
         _stack.push(_pc + 1);
-        _pc = param;
+        if(typeof param === "number"){
+          _pc = param;
+        } else {
+          _pc = this.state.labels.get(param);
+        }
         break;
       case "RET":
         // RET: set pc to pop
