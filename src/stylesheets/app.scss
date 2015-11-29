@@ -1,14 +1,16 @@
 $grey: #808080;
+$light-grey: #c0c0c0;
+$light-light-grey: #aaa;
+$red: #f00;
 $mono: 'Monaco', monospace;
 
 .editor {
-  border: solid 1px $grey;
-  font-family: $mono;
   width: 100%;
 }
 
 .buttons {
   float: right;
+  padding-top: 8px;
 
   .btn {
     margin-left: 5px;
@@ -16,7 +18,7 @@ $mono: 'Monaco', monospace;
   }
 
   .btn-load {
-    margin-right: 20px;
+    margin-right: 20;
   }
 }
 
