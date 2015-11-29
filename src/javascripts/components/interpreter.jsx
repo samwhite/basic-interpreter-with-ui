@@ -35,9 +35,8 @@ export default class Interpreter extends React.Component {
       <div>
       <div className="row">
         <div className="col-md-8 main">
-          <h4>Editor</h4>
           <textarea className="editor"
-                    rows="10"
+                    rows="11"
                     defaultValue={this.state.defaultCode}
                     onChange={this._setModified}
                     ref="sourceCode"
@@ -140,6 +139,10 @@ export default class Interpreter extends React.Component {
           <pre className="monospace">{JSON.stringify(this.state.stack)}</pre>
           <h5>Loaded instructions:</h5>
           <pre className="monospace">{JSON.stringify(this.state.instructions)}</pre>
+          <hr />
+          <div className="footer">
+            <small>Created by Sam White</small>
+          </div>
         </div>
       </div>
       </div>
