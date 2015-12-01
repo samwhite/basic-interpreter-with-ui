@@ -7,18 +7,18 @@ export default class Interpreter extends React.Component {
   constructor(props) {
       super(props);
       this.state = {
-          defaultCode: "INT 2\nINT 3\nADD\nPRINT",
-          instructions: [],
-          labels: new Map(),
-          stack: [],
-          pc: 0,
-          output: "",
-          varStore: new Map(),
-          history: [],
-          status: "Ready",
-          statusClass: "label label-primary",
-          volatile: true,
-          programModified: false
+        defaultCode: decodeURI(document.location.search.substring(1, document.location.search.length)),
+        instructions: [],
+        labels: new Map(),
+        stack: [],
+        pc: 0,
+        output: "",
+        varStore: new Map(),
+        history: [],
+        status: "Ready",
+        statusClass: "label label-primary",
+        volatile: true,
+        programModified: false
       };
       this._load = this._load.bind(this);
       this._runFull = this._runFull.bind(this);
