@@ -7,7 +7,7 @@ export default class Interpreter extends React.Component {
   constructor(props) {
       super(props);
       this.state = {
-        defaultCode: decodeURI(document.location.search.substring(1, document.location.search.length)),
+        defaultCode: decodeURIComponent(document.location.search.substring(1, document.location.search.length)),
         instructions: [],
         labels: new Map(),
         stack: [],
