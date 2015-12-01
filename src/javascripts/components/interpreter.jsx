@@ -99,7 +99,7 @@ export default class Interpreter extends React.Component {
           </tr>
           <tr>
           <td><code>VAR_SET x</code></td>
-          <td>Sets the variable <code>x</code> to the (peeked) top of the stack</td>
+          <td>Sets the variable <code>x</code> to the (popped) top of the stack</td>
           </tr>
           <tr>
           <td><code>VAR_LOOKUP y</code></td>
@@ -345,8 +345,8 @@ export default class Interpreter extends React.Component {
           _pc++;
           break;
         case "VAR_SET":
-          // VAR_SET x: sets the variable x to the (peeked) top of the stack.
-          _varStore.set(param, _stack[_stack.length - 1]);
+          // VAR_SET x: sets the variable x to the (popped) top of the stack.
+          _varStore.set(param, _stack.pop());
           _pc++;
           break;
         case "VAR_LOOKUP":
@@ -520,8 +520,8 @@ export default class Interpreter extends React.Component {
         _pc++;
         break;
       case "VAR_SET":
-        // VAR_SET x: sets the variable x to the (peeked) top of the stack.
-        _varStore.set(param, _stack[_stack.length - 1]);
+        // VAR_SET x: sets the variable x to the (popped) top of the stack.
+        _varStore.set(param, _stack.pop());
         _pc++;
         break;
       case "VAR_LOOKUP":
